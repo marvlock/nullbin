@@ -36,15 +36,30 @@ export interface GetPasteResult {
   expiredAt?: Date
 }
 
+// Dev/runtime fallback when MongoDB is unavailable.
+// This keeps the app functional locally but data is process-local and ephemeral.
+const inMemoryPastes = new Map<string, Paste>()
+
+async function getCollectionSafe() {
+  try {
+    return await getPastesCollection()
+  } catch (error) {
+    console.warn('MongoDB unavailable, using in-memory fallback storage:', error)
+    return null
+  }
+}
+
 // Initialize database on module load
 initializeDatabase().catch(console.error)
 
 export async function createPaste(data: CreatePasteRequest): Promise<string> {
   try {
     console.log('Starting paste creation process...');
-    
-    const collection = await getPastesCollection()
-    console.log('MongoDB connection successful, collection accessed');
+
+    const collection = await getCollectionSafe()
+    if (collection) {
+      console.log('MongoDB connection successful, collection accessed')
+    }
     const id = generateId()
     const now = Date.now()
     
@@ -108,23 +123,29 @@ export async function createPaste(data: CreatePasteRequest): Promise<string> {
     passwordProtected: !!data.password,
     viewCount: 0,
   }
+  if (!collection) {
+    inMemoryPastes.set(id, paste)
+    console.log(`Paste created in fallback storage: ID "${id}"`)
+    return id
+  }
+
   try {
-    console.log(`Attempting to insert paste with ID "${id}"...`);
-    const result = await collection.insertOne(paste as Omit<Paste, '_id'>);
-    
+    console.log(`Attempting to insert paste with ID "${id}"...`)
+    const result = await collection.insertOne(paste as Omit<Paste, '_id'>)
+
     if (!result.acknowledged) {
-      console.error('MongoDB insert not acknowledged');
-      throw new Error('Database operation failed: Insert not acknowledged');
+      console.error('MongoDB insert not acknowledged')
+      throw new Error('Database operation failed: Insert not acknowledged')
     }
-    
-    console.log(`Paste created: ID "${id}" successfully created (MongoDB insertedId: ${result.insertedId})`);
+
+    console.log(`Paste created: ID "${id}" successfully created (MongoDB insertedId: ${result.insertedId})`)
     return id
   } catch (error) {
-    console.error(`MongoDB insert error:`, error);
+    console.error(`MongoDB insert error:`, error)
     if (error instanceof Error) {
-      console.error(`Error name: ${error.name}, Message: ${error.message}, Stack: ${error.stack}`);
+      console.error(`Error name: ${error.name}, Message: ${error.message}, Stack: ${error.stack}`)
     }
-    throw new Error(`Failed to create paste: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`Failed to create paste: ${error instanceof Error ? error.message : String(error)}`)
   }
   } catch (error) {
     console.error(`Paste creation error:`, error);
@@ -136,9 +157,11 @@ export async function createPaste(data: CreatePasteRequest): Promise<string> {
 }
 
 export async function getPaste(id: string): Promise<GetPasteResult> {
-  const collection = await getPastesCollection()
-  
-  const paste = await collection.findOne<Paste>({ id })
+  const collection = await getCollectionSafe()
+
+  const paste = collection
+    ? await collection.findOne<Paste>({ id })
+    : inMemoryPastes.get(id) || null
   if (!paste) {
     console.log(`Paste lookup: ID "${id}" - Not found in database`)
     return { paste: null, expired: false }
@@ -158,9 +181,13 @@ export async function getPaste(id: string): Promise<GetPasteResult> {
                         `${Math.floor(timeExpired / 86400000)}d ago`
       
       console.log(`Paste expired: ID "${id}" - Expired ${expiredAgo} (${expiryDate.toISOString()}). Cleaning up...`)
-      
+
       // Delete the expired paste
-      await collection.deleteOne({ id })
+      if (collection) {
+        await collection.deleteOne({ id })
+      } else {
+        inMemoryPastes.delete(id)
+      }
       console.log(`Paste cleanup: ID "${id}" - Successfully removed from database`)
       return { paste: null, expired: true, expiredAt: expiryDate }
     }
@@ -178,37 +205,61 @@ export async function getPaste(id: string): Promise<GetPasteResult> {
   }
   
   // Increment view count
-  await collection.updateOne(
-    { id },
-    { $inc: { viewCount: 1 } }
-  )
+  if (collection) {
+    await collection.updateOne(
+      { id },
+      { $inc: { viewCount: 1 } }
+    )
+  } else {
+    inMemoryPastes.set(id, { ...paste, viewCount: paste.viewCount + 1 })
+  }
   
   // Return updated paste with incremented view count
   return { paste: { ...paste, viewCount: paste.viewCount + 1 }, expired: false }
 }
 
 export async function deletePaste(id: string): Promise<boolean> {
-  const collection = await getPastesCollection()
+  const collection = await getCollectionSafe()
+  if (!collection) {
+    return inMemoryPastes.delete(id)
+  }
+
   const result = await collection.deleteOne({ id })
   return result.deletedCount > 0
 }
 
 export async function getPasteCount(): Promise<number> {
-  const collection = await getPastesCollection()
+  const collection = await getCollectionSafe()
+  if (!collection) {
+    return inMemoryPastes.size
+  }
   return await collection.countDocuments()
 }
 
 // Helper function to clean up expired pastes manually (backup to TTL)
 export async function cleanupExpiredPastes(): Promise<number> {
-  const collection = await getPastesCollection()
-  
+  const collection = await getCollectionSafe()
+
   console.log('Starting manual cleanup of expired pastes...')
-  
+
+  if (!collection) {
+    let deleted = 0
+    const now = Date.now()
+    for (const [id, paste] of inMemoryPastes.entries()) {
+      if (paste.expiresAt && now > new Date(paste.expiresAt).getTime()) {
+        inMemoryPastes.delete(id)
+        deleted += 1
+      }
+    }
+    console.log(`Cleanup completed (fallback): ${deleted} expired pastes removed`)
+    return deleted
+  }
+
   // Find expired pastes first to log them
   const expiredPastes = await collection.find({
     expiresAt: { $ne: null, $lt: new Date() }
   }).toArray()
-  
+
   if (expiredPastes.length > 0) {
     console.log(`Found ${expiredPastes.length} expired pastes to clean up:`)
     expiredPastes.forEach(paste => {
@@ -220,11 +271,11 @@ export async function cleanupExpiredPastes(): Promise<number> {
       console.log(`  - Paste "${paste.id}" (expired ${timeAgo})`)
     })
   }
-  
+
   const result = await collection.deleteMany({
     expiresAt: { $ne: null, $lt: new Date() }
   })
-  
+
   console.log(`Cleanup completed: ${result.deletedCount} expired pastes removed`)
   return result.deletedCount
 }
