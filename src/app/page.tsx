@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Plus, Search, Shield, Clock, Copy, Lock, Github, ArrowRight } from "lucide-react"
+import { Plus, Search, Shield, Clock, Copy, Lock, Globe, ArrowRight } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -25,9 +25,9 @@ function Header({ setMode }: { setMode: (mode: "select" | "create" | "view") => 
           </Link>
         </div>
         <div className="flex items-center gap-4">
-          <a href="https://github.com/marvlock/nullbin" target="_blank" rel="noreferrer" className="hidden sm:flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            <Github className="w-4 h-4" />
-            <span>GitHub</span>
+          <a href="https://www.marvlock.dev" target="_blank" rel="noreferrer" className="hidden sm:flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <Globe className="w-4 h-4" />
+            <span>Website</span>
           </a>
           <div className="w-px h-4 bg-border hidden sm:block"></div>
           <ThemeToggle />
