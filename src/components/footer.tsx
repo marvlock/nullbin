@@ -1,39 +1,45 @@
 import React from 'react'
-import { Shield, Lock, Clock, Code } from 'lucide-react'
+import { Shield, Lock, Clock, Heart } from 'lucide-react'
+import Link from 'next/link'
 
 export default function Footer() {
   return (
-    <footer className="border-t bg-background/80 backdrop-blur-xl mt-12 sm:mt-16">
-      <div className="container mx-auto px-4 py-8 sm:py-10">
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Shield className="h-4 w-4 text-primary" />
-            </div>
-            <p className="text-sm sm:text-base font-semibold">
-              <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">NullBin</span>
+    <footer className="border-t border-border/40 bg-background/50 backdrop-blur-xl py-12 px-4">
+      <div className="container mx-auto max-w-6xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
+          {/* Brand Column */}
+          <div className="space-y-6">
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold tracking-tighter">
+                N
+              </div>
+              <span className="text-xl font-bold tracking-tight">NullBin</span>
+            </Link>
+            <p className="text-muted-foreground text-sm max-w-xs leading-relaxed">
+              A developer-first, zero-knowledge encryption pastebin. 
+              Built for speed, privacy, and simplicity.
             </p>
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto">
-            Privacy-first pastebin with client-side encryption
+
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold uppercase tracking-wider text-foreground">Safety</h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li><div className="flex items-center gap-2"><Shield className="w-3.5 h-3.5" /> <span>End-to-End Encrypted</span></div></li>
+              <li><div className="flex items-center gap-2"><Lock className="w-3.5 h-3.5" /> <span>Zero Knowledge</span></div></li>
+              <li><div className="flex items-center gap-2"><Clock className="w-3.5 h-3.5" /> <span>Auto-Destruct</span></div></li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="pt-8 border-t border-border/40 flex flex-col md:flex-row items-center justify-between gap-6">
+          <p className="text-xs text-muted-foreground">
+            © {new Date().getFullYear()} NullBin. No rights reserved.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Shield className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>No tracking</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Lock className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>No accounts</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Auto-expiry</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Code className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Open source</span>
-            </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span>Made with</span>
+            <Heart className="w-3 h-3 text-red-500 fill-red-500" />
+            <span>by</span>
+            <a href="https://www.marvlock.dev" target="_blank" rel="noreferrer" className="font-medium text-foreground hover:underline italic">marvlock</a>
           </div>
         </div>
       </div>

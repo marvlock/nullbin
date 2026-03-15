@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Plus, Search, Shield, Clock, Copy, Lock, Github, ArrowRight } from "lucide-react"
+import { Plus, Search, Shield, Clock, Copy, Lock, Globe, ArrowRight } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -25,9 +25,9 @@ function Header({ setMode }: { setMode: (mode: "select" | "create" | "view") => 
           </Link>
         </div>
         <div className="flex items-center gap-4">
-          <a href="https://github.com/marvlock/nullbin" target="_blank" rel="noreferrer" className="hidden sm:flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            <Github className="w-4 h-4" />
-            <span>GitHub</span>
+          <a href="https://www.marvlock.dev" target="_blank" rel="noreferrer" className="hidden sm:flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <Globe className="w-4 h-4" />
+            <span>Website</span>
           </a>
           <div className="w-px h-4 bg-border hidden sm:block"></div>
           <ThemeToggle />
@@ -162,7 +162,7 @@ function HomeContent() {
         </div>
 
         {/* Hero Section */}
-        <section className="container mx-auto px-4 pt-32 pb-24 sm:pt-40 sm:pb-32 flex flex-col items-center text-center">
+        <section className="container mx-auto px-4 pt-32 pb-40 sm:pt-40 sm:pb-56 flex flex-col items-center text-center">
           
           <h1 className="text-5xl sm:text-6xl md:text-8xl font-black tracking-tighter mb-8 max-w-5xl leading-[1.1]">
             Share code with <br className="hidden sm:block" />
@@ -198,7 +198,7 @@ function HomeContent() {
         </section>
 
         {/* Features / Bento Grid */}
-        <section className="container mx-auto px-4 py-24 border-t border-border/40 bg-background/40 backdrop-blur-sm">
+        <section className="container mx-auto px-4 py-32 sm:py-48 border-t border-border/40 bg-background/40 backdrop-blur-sm">
           <div className="max-w-6xl mx-auto">
             <div className="mb-16">
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Engineered for privacy.</h2>
@@ -253,7 +253,7 @@ function HomeContent() {
           </div>
         </section>
       </main>
-
+      <Footer />
     </div>
   )
 }
