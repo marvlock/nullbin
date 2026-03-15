@@ -39,7 +39,7 @@ export default function Footer() {
             <span>Made with</span>
             <Heart className="w-3 h-3 text-red-500 fill-red-500" />
             <span>by</span>
-            <a href="https://github.com/marvlock" target="_blank" rel="noreferrer" className="font-medium text-foreground hover:underline italic">marvlock</a>
+            <a href="https://www.marvlock.dev" target="_blank" rel="noreferrer" className="font-medium text-foreground hover:underline italic">marvlock</a>
           </div>
         </div>
       </div>
